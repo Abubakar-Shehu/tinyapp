@@ -32,8 +32,12 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+let relatedID = generateRandomString();
+
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
+  urlDatabase.relatedID = req.body.longURL;
+  console.log(urlDatabase);
   res.send("Ok"); // Respond with 'Ok' (we will replace this)
 });
 
@@ -48,5 +52,14 @@ app.listen(PORT, () => {
 });
 
 function generateRandomString() {
-  
+  const short = [];
+  for (let i = 0; i < 4; i++) {
+    if (i % 2 === 0) {
+      short.push(Math.floor(Math.random() * 9));
+    }
+    short.push(i);
+  }
+  const shortURL = short.join('');
+  return shortURL.toString(16);
 };
+
