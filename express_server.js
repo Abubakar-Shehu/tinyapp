@@ -57,7 +57,9 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  res.redirect(`/urls/${req.params.id}`);
+  console.log("Strng", req.params.id) 
+  urlDatabase[req.params.id] = req.body.longURL;
+  res.redirect("/urls");
 });
 
 app.listen(PORT, () => {
