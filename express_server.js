@@ -108,11 +108,11 @@ app.post("/register", (req, res) => {
   const { email, password } = req.body;
 
   if (email === '' || password === '') {
-    return res.status(400)
+    return res.status(400).send('Email or password cannot be empty');
   }
 
   if(!duplicateUser(email)) {
-    res.status(400).send("Already a user")
+    res.status(400).send('Email is already in use')
   }
 
   users[newUserID] = {
@@ -143,13 +143,10 @@ const generateRandomString = () => {
 };
 
 const duplicateUser = (email) => {
-  // const info = Object.values(users);
-  // console.log(info)
-  for (const existingUsers in users) {
-    console.log(existingUsers["id"])
-    if (existingUsers["email"] === email) {
+  for (const userId in users) {
+    if (users[userId].email === email) {
       return false;
     }
   }
-  return true
+  return true;
 }
