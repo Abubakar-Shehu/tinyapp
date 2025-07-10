@@ -106,11 +106,23 @@ app.post("/logout", (req, res) => {
 app.post("/register", (req, res) => {
   const newUserID = generateRandomString();
   const { email, password } = req.body;
+
+  if (email === '' || password === '') {
+    return res.status(400)
+  }
+
+  if(!duplicateUser(email)) {
+    res.status(400).send("Already a user")
+  }
+
   users[newUserID] = {
     id: newUserID,
     email: email,
     password: password
   };
+
+  // console.log(users);
+
   res.cookie('user_id', newUserID);
   res.redirect("/urls");
 })
@@ -129,3 +141,15 @@ const generateRandomString = () => {
 
   return str;
 };
+
+const duplicateUser = (email) => {
+  // const info = Object.values(users);
+  // console.log(info)
+  for (const existingUsers in users) {
+    console.log(existingUsers["id"])
+    if (existingUsers["email"] === email) {
+      return false;
+    }
+  }
+  return true
+}
