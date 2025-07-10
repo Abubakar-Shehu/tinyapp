@@ -16,7 +16,7 @@
   <%- include('partials/_header') %>
 
     <main style="margin: 1em;">
-      <h3>Registration</h3>
+      <h3>Create an account</h3>
       <form class="form-inline" action="/register" method="POST">
         <div class="form-group mb-2">
           <label for="email">Email:</label>
@@ -27,6 +27,11 @@
           <button type="submit" class="btn btn-primary">Submit</button>
         </div>
       </form>
+      <% if (error) { %>
+        <p>
+          <%= error %>
+        </p>
+        <% } %>
     </main>
     <!-- Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"

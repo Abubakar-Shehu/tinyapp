@@ -39,6 +39,68 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+app.get("/register", (req, res) => {
+  const templateVars = { 
+    user: users[req.cookies.user_id],
+    error: ""
+   };
+  res.render("register", templateVars);
+})
+
+app.post("/register", (req, res) => {
+  const newUserID = generateRandomString();
+  const { email, password } = req.body;
+
+  if (email === '' || password === '') {
+    return res.status(400).send('Email or password cannot be empty');
+  } else if(duplicateUser(email, password)) {
+    const templateVars = {
+      user: users[req.cookies.user_id], 
+      error: "Already have an account"
+    };
+    res.status(403).render("login", templateVars);
+  } else if(duplicateEmail(email)) {
+    const templateVars = {
+      user: null, 
+      error: "Email already in use"
+    };
+    res.status(403).render("register", templateVars);
+  } else {
+    users[newUserID] = {
+      id: newUserID,
+      email: email,
+      password: password
+    };
+    
+    res.cookie('user_id', newUserID);
+    res.redirect("/urls");
+  }
+})
+
+app.get("/login", (req, res) => {
+  const templateVars = { 
+    user: users[req.cookies.user_id],
+    error: ""
+   };
+  res.render("login", templateVars);
+});
+
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
+  const existingUser = duplicateUser(email, password);
+
+  if(existingUser) {
+    res.cookie('user_id', existingUser.id);
+    res.redirect("/urls");
+  } else {
+      const templateVars = {
+        user: null, 
+        error: "Login failed. Please check your email and password."
+      };
+      res.status(403).render("login", templateVars);
+  }
+});
+
 app.get("/urls", (req, res) => {
   const templateVars = { 
     urls: urlDatabase,
@@ -59,13 +121,6 @@ app.post("/urls", (req, res) => {
   urlDatabase[relatedID] = req.body.longURL;
   res.redirect(`/urls/${relatedID}`); 
 });
-
-app.get("/register", (req, res) => {
-  const templateVars = { 
-    user: users[req.cookies.user_id]
-   };
-  res.render("register", templateVars);
-})
 
 app.get("/urls/:id", (req, res) => {
   const neededURL = req.params.id;
@@ -93,45 +148,9 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls");
 });
 
-app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
-  res.redirect("/urls");
-});
-
 app.post("/logout", (req, res) => {
-  res.clearCookie('username');
-  res.redirect("/urls");
-});
-
-app.post("/register", (req, res) => {
-  const newUserID = generateRandomString();
-  const { email, password } = req.body;
-
-  if (email === '' || password === '') {
-    return res.status(400).send('Email or password cannot be empty');
-  }
-
-  if(!duplicateUser(email)) {
-    res.status(400).send('Email is already in use')
-  }
-
-  users[newUserID] = {
-    id: newUserID,
-    email: email,
-    password: password
-  };
-
-  // console.log(users);
-
-  res.cookie('user_id', newUserID);
-  res.redirect("/urls");
-})
-
-app.get("/login", (req, res) => {
-  const templateVars = { 
-    user: users[req.cookies.user_id]
-   };
-  res.render("login", templateVars);
+  res.clearCookie('user_id');
+  res.redirect("/login");
 });
 
 app.listen(PORT, () => {
@@ -149,11 +168,20 @@ const generateRandomString = () => {
   return str;
 };
 
-const duplicateUser = (email) => {
+const duplicateEmail = (email) => {
   for (const userId in users) {
-    if (users[userId].email === email) {
-      return false;
+    if (users[userId].email === email)  {
+      return true;
     }
   }
-  return true;
+  return false;
+}
+
+const duplicateUser = (email, password) => {
+  for (const userId in users) {
+    if (users[userId].email === email && users[userId].password === password) {
+      return users[userId];
+    }
+  }
+  return false;
 }

@@ -19,12 +19,10 @@
         <button type="submit" class="btn btn-primary">Logout</button>
       </form>
       <% } else { %>
-        <form method="GET" action="/login">
-          <button type="submit" class="btn btn-primary">Login</button>
-        </form>
-        <form method="GET" action="/register">
-          <button type="submit" class="btn btn-primary">Register</button>
-        </form>
+        <a href="/login"
+          style="padding: 10px; background-color: white; margin-right: 15px; border-radius: 25px; color: black; text-decoration: none;">Login</a>
+        <a href="/register"
+          style="padding: 10px; background-color: white; margin-left: 5px; border-radius: 25px; color: black; text-decoration: none;">Register</a>
         <% } %>
 
   </nav>
