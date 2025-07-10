@@ -1,3 +1,4 @@
+
 const express = require("express");
 const app = express();
 const PORT = 8080;
@@ -13,6 +14,19 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
+const users = {
+  // userRandomID: {
+  //   id: "userRandomID",
+  //   email: "user@example.com",
+  //   password: "purple-monkey-dinosaur",
+  // },
+  // user2RandomID: {
+  //   id: "user2RandomID",
+  //   email: "user2@example.com",
+  //   password: "dishwasher-funk",
+  // },
+};
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -25,16 +39,80 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+app.get("/register", (req, res) => {
+  const templateVars = { 
+    user: users[req.cookies.user_id],
+    error: ""
+   };
+  res.render("register", templateVars);
+})
+
+app.post("/register", (req, res) => {
+  const newUserID = generateRandomString();
+  const { email, password } = req.body;
+
+  if (email === '' || password === '') {
+    return res.status(400).send('Email or password cannot be empty');
+  } else if(duplicateUser(email, password)) {
+    const templateVars = {
+      user: users[req.cookies.user_id], 
+      error: "Already have an account"
+    };
+    res.status(403).render("login", templateVars);
+  } else if(duplicateEmail(email)) {
+    const templateVars = {
+      user: null, 
+      error: "Email already in use"
+    };
+    res.status(403).render("register", templateVars);
+  } else {
+    users[newUserID] = {
+      id: newUserID,
+      email: email,
+      password: password
+    };
+    
+    res.cookie('user_id', newUserID);
+    res.redirect("/urls");
+  }
+})
+
+app.get("/login", (req, res) => {
+  const templateVars = { 
+    user: users[req.cookies.user_id],
+    error: ""
+   };
+  res.render("login", templateVars);
+});
+
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
+  const existingUser = duplicateUser(email, password);
+
+  if(existingUser) {
+    res.cookie('user_id', existingUser.id);
+    res.redirect("/urls");
+  } else {
+      const templateVars = {
+        user: null, 
+        error: "Login failed. Please check your email and password."
+      };
+      res.status(403).render("login", templateVars);
+  }
+});
+
 app.get("/urls", (req, res) => {
   const templateVars = { 
     urls: urlDatabase,
-    username: req.cookies["username"]
+    user: users[req.cookies.user_id]
    };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies["username"] };
+  const templateVars = { 
+    user: users[req.cookies.user_id]
+   };
   res.render("urls_new", templateVars);
 });
 
@@ -45,8 +123,12 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  const neededURL = req.params.id
-  const templateVars = { id: neededURL, longURL: urlDatabase[neededURL], username: req.cookies["username"] };
+  const neededURL = req.params.id;
+  const templateVars = { 
+    id: neededURL, 
+    longURL: urlDatabase[neededURL], 
+    user: users[req.cookies.user_id]
+   };
   res.render("urls_show", templateVars);
 });
 
@@ -56,24 +138,19 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id]
+  delete urlDatabase[req.params.id];
   res.redirect(`/urls`); 
 });
 
 app.post("/urls/:id", (req, res) => {
-  console.log("Strng", req.params.id) 
+  console.log("Strng", req.params.id); 
   urlDatabase[req.params.id] = req.body.longURL;
   res.redirect("/urls");
 });
 
-app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
-  res.redirect("/urls");
-});
-
 app.post("/logout", (req, res) => {
-  res.clearCookie('username')
-  res.redirect("/urls");
+  res.clearCookie('user_id');
+  res.redirect("/login");
 });
 
 app.listen(PORT, () => {
@@ -81,14 +158,30 @@ app.listen(PORT, () => {
 });
 
 const generateRandomString = () => {
-  const short = [];
-  for (let i = 0; i < 4; i++) {
-    if (i % 2 === 0) {
-      short.push(Math.floor(Math.random() * 9));
-    }
-    short.push(i);
-  }
-  const shortURL = short.join('');
-  return shortURL.toString(16);
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let str = '';
+
+  for (let i = 0; i < 6; i++) {
+    str += characters.charAt(Math.floor(Math.random() * characters.length));
+  };
+
+  return str;
 };
 
+const duplicateEmail = (email) => {
+  for (const userId in users) {
+    if (users[userId].email === email)  {
+      return true;
+    }
+  }
+  return false;
+}
+
+const duplicateUser = (email, password) => {
+  for (const userId in users) {
+    if (users[userId].email === email && users[userId].password === password) {
+      return users[userId];
+    }
+  }
+  return false;
+}
