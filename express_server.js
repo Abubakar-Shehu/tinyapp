@@ -39,11 +39,9 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  // console.log(req.body); // Log the POST request body to the console
   let relatedID = generateRandomString();
   urlDatabase[relatedID] = req.body.longURL;
-  //console.log(urlDatabase);
-  res.redirect(`/urls/${relatedID}`); // Respond with 'Ok' (we will replace this)
+  res.redirect(`/urls/${relatedID}`); 
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -70,7 +68,12 @@ app.post("/urls/:id", (req, res) => {
 
 app.post("/login", (req, res) => {
   res.cookie('username', req.body.username);
-  res.redirect("/urls")
+  res.redirect("/urls");
+});
+
+app.post("/logout", (req, res) => {
+  res.clearCookie('username')
+  res.redirect("/urls");
 });
 
 app.listen(PORT, () => {
