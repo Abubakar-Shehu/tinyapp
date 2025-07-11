@@ -2,13 +2,12 @@
 const express = require("express");
 const app = express();
 const PORT = 8080;
-const cookieParser = require('cookie-parser');
 const cookieSession = require('cookie-session')
 const bcrypt = require("bcryptjs");
+const { duplicateEmail, duplicateUser, urlsForUser } = require('./helpers');
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',
   keys: ["I-am-a-beginner-spare-me-pls"],
@@ -77,13 +76,13 @@ app.post("/register", (req, res) => {
 
   if (email === '' || password === '') {
     return res.status(400).send('Email or password cannot be empty');
-  } else if(duplicateUser(email, password)) {
+  } else if(duplicateUser(email, password, users)) {
     const templateVars = {
       user: users[req.session.user_id], 
       error: "Already have an account"
     };
     res.status(403).render("login", templateVars);
-  } else if(duplicateEmail(email)) {
+  } else if(duplicateEmail(email, users)) {
     const templateVars = {
       user: null, 
       error: "Email already in use"
@@ -117,7 +116,7 @@ app.get("/login", (req, res) => {
 
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
-  const existingUser = duplicateUser(email, password);
+  const existingUser = duplicateUser(email, password, users);
 
   if(existingUser) {
     req.session['user_id'] = existingUser.id;
@@ -133,7 +132,7 @@ app.post("/login", (req, res) => {
 
 app.get("/urls", (req, res) => {  
   const templateVars = { 
-    urls: urlsForUser(req.session.user_id),
+    urls: urlsForUser(req.session.user_id, urlDatabase),
     user: users[req.session.user_id],
     error: ""
    };
@@ -224,30 +223,3 @@ const generateRandomString = () => {
   return str;
 };
 
-const duplicateEmail = (email) => {
-  for (const userId in users) {
-    if (users[userId].email === email)  {
-      return true;
-    }
-  }
-  return false;
-}
-
-const duplicateUser = (email, password) => {
-  for (const userId in users) {
-    if (users[userId].email === email && bcrypt.compareSync(password, users[userId].password)) {
-      return users[userId];
-    }
-  }
-  return false;
-}
-
-const urlsForUser = (user_id) => {
-  let returnedObjects = {};
-  for (const addedURL in urlDatabase) {
-    if(urlDatabase[addedURL].userID === user_id) {
-      returnedObjects[addedURL] = urlDatabase[addedURL];
-    }
-  }
-  return returnedObjects
-};
