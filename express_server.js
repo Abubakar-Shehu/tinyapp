@@ -4,7 +4,7 @@ const app = express();
 const PORT = 8080;
 const cookieSession = require('cookie-session')
 const bcrypt = require("bcryptjs");
-const { getUserByEmail, duplicateUser, urlsForUser } = require('./helpers');
+const { getUserByEmail, duplicateUser, urlsForUser, generateRandomString } = require('./helpers');
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
@@ -212,14 +212,5 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-const generateRandomString = () => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let str = '';
 
-  for (let i = 0; i < 6; i++) {
-    str += characters.charAt(Math.floor(Math.random() * characters.length));
-  };
-
-  return str;
-};
 

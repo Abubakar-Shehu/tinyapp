@@ -22,4 +22,9 @@ describe('getUserByEmail', function() {
     // Write your assert statement here
     assert.strictEqual(user.id, expectedUserID, "They should equal")
   });
+  it('the user it returns should have an email property', function() {
+    const user = getUserByEmail("user@example.com", testUsers);
+    const expectedEmail = "user@example.com";
+    assert.strictEqual(user.email, expectedEmail, "user with email is returned");
+  });
 });
