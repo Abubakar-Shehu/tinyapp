@@ -3,6 +3,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 const cookieParser = require('cookie-parser');
+const bcrypt = require("bcryptjs");
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
@@ -66,6 +67,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const newUserID = generateRandomString();
   const { email, password } = req.body;
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (email === '' || password === '') {
     return res.status(400).send('Email or password cannot be empty');
@@ -85,9 +87,9 @@ app.post("/register", (req, res) => {
     users[newUserID] = {
       id: newUserID,
       email: email,
-      password: password
+      password: hashedPassword
     };
-    
+    console.log(users)
     res.cookie('user_id', newUserID);
     res.redirect("/urls");
   }
@@ -123,9 +125,9 @@ app.post("/login", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  console.log(urlDatabase)
-  console.log(urlsForUser(req.cookies.user_id));
-  console.log(req.cookies.user_id);
+  // console.log(urlDatabase)
+  // console.log(urlsForUser(req.cookies.user_id));
+  // console.log(req.cookies.user_id);
   
   const templateVars = { 
     urls: urlsForUser(req.cookies.user_id),
@@ -229,8 +231,9 @@ const duplicateEmail = (email) => {
 }
 
 const duplicateUser = (email, password) => {
+  const hashedPassword = bcrypt.hashSync(password, 10);
   for (const userId in users) {
-    if (users[userId].email === email && users[userId].password === password) {
+    if (users[userId].email === email && bcrypt.compareSync(users[userId].password, hashedPassword)) {
       return users[userId];
     }
   }
