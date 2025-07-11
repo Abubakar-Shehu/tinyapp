@@ -97,7 +97,7 @@ app.post("/register", (req, res) => {
       password: hashedPassword
     };
     console.log(users)
-    res.cookie('user_id', newUserID);
+    req.session['user_id'] = newUserID;
     res.redirect("/urls");
   }
 })
@@ -120,7 +120,7 @@ app.post("/login", (req, res) => {
   const existingUser = duplicateUser(email, password);
 
   if(existingUser) {
-    res.cookie('user_id', existingUser.id);
+    req.session['user_id'] = existingUser.id;
     res.redirect("/urls");
   } else {
     const templateVars = {
@@ -205,7 +205,7 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  req.session['user_id'] = null;
   res.redirect("/login");
 });
 
