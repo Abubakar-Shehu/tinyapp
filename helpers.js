@@ -1,3 +1,5 @@
+const bcrypt = require("bcryptjs");
+
 const generateRandomString = () => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let str = '';
@@ -34,7 +36,8 @@ const urlsForUser = (user_id, database) => {
       returnedObjects[addedURL] = database[addedURL];
     }
   }
-  return returnedObjects
+  return returnedObjects;
 };
 
-module.exports = { getUserByEmail, duplicateUser, urlsForUser, generateRandomString }
+
+module.exports = { getUserByEmail, duplicateUser, urlsForUser, generateRandomString };
