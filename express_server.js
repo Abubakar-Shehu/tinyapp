@@ -3,11 +3,18 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session')
 const bcrypt = require("bcryptjs");
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ["I-am-a-beginner-spare-me-pls"],
+  // Cookie Options
+  maxAge: 300 * 1000 // 5 min
+}))
 
 
 // const urlDatabase = {
@@ -53,11 +60,11 @@ app.get("/hello", (req, res) => {
 
 app.get("/register", (req, res) => {
   const registeredUsers = Object.keys(users)
-  if (registeredUsers.includes(req.cookies.user_id)) {
+  if (registeredUsers.includes(req.session.user_id)) {
     res.redirect("/urls");
   } else {
     const templateVars = { 
-      user: users[req.cookies.user_id],
+      user: users[req.session.user_id],
       error: ""
    };
     res.render("register", templateVars);
@@ -72,7 +79,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send('Email or password cannot be empty');
   } else if(duplicateUser(email, password)) {
     const templateVars = {
-      user: users[req.cookies.user_id], 
+      user: users[req.session.user_id], 
       error: "Already have an account"
     };
     res.status(403).render("login", templateVars);
@@ -97,11 +104,11 @@ app.post("/register", (req, res) => {
 
 app.get("/login", (req, res) => {
   const registeredUsers = Object.keys(users)
-  if (registeredUsers.includes(req.cookies.user_id)) {
+  if (registeredUsers.includes(req.session.user_id)) {
     res.redirect("/urls");
   } else {
   const templateVars = { 
-    user: users[req.cookies.user_id],
+    user: users[req.session.user_id],
     error: ""
    };
   res.render("login", templateVars);
@@ -124,14 +131,10 @@ app.post("/login", (req, res) => {
   }
 });
 
-app.get("/urls", (req, res) => {
-  // console.log(urlDatabase)
-  // console.log(urlsForUser(req.cookies.user_id));
-  // console.log(req.cookies.user_id);
-  
+app.get("/urls", (req, res) => {  
   const templateVars = { 
-    urls: urlsForUser(req.cookies.user_id),
-    user: users[req.cookies.user_id],
+    urls: urlsForUser(req.session.user_id),
+    user: users[req.session.user_id],
     error: ""
    };
   res.render("urls_index", templateVars);
@@ -139,11 +142,11 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const registeredUsers = Object.keys(users)
-  if (!registeredUsers.includes(req.cookies.user_id)) {
+  if (!registeredUsers.includes(req.session.user_id)) {
     res.redirect("/login");
   } else {
   const templateVars = { 
-    user: users[req.cookies.user_id],
+    user: users[req.session.user_id],
    };
   res.render("urls_new", templateVars);
   }
@@ -151,7 +154,7 @@ app.get("/urls/new", (req, res) => {
 
 app.post("/urls", (req, res) => {
   const registeredUsers = Object.keys(users)
-  if (!registeredUsers.includes(req.cookies.user_id)) {
+  if (!registeredUsers.includes(req.session.user_id)) {
     const templateVars = {
       urls: urlDatabase,
       user: null, 
@@ -163,7 +166,7 @@ app.post("/urls", (req, res) => {
 
   urlDatabase[relatedID] = {
     longURL: req.body.longURL,
-    userID: req.cookies.user_id
+    userID: req.session.user_id
   }
   res.redirect(`/urls/${relatedID}`);
   } 
@@ -176,7 +179,7 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = { 
     id: neededURL, 
     longURL: urlDatabase[neededURL].longURL, 
-    user: users[req.cookies.user_id]
+    user: users[req.session.user_id]
    };
   res.render("urls_show", templateVars);
 });
