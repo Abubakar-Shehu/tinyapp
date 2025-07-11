@@ -9,9 +9,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 
+// const urlDatabase = {
+//   b2xVn2: "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com",
+// };
+
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 const users = {
@@ -112,8 +123,12 @@ app.post("/login", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+  console.log(urlDatabase)
+  console.log(urlsForUser(req.cookies.user_id));
+  console.log(req.cookies.user_id);
+  
   const templateVars = { 
-    urls: urlDatabase,
+    urls: urlsForUser(req.cookies.user_id),
     user: users[req.cookies.user_id],
     error: ""
    };
@@ -143,16 +158,22 @@ app.post("/urls", (req, res) => {
     res.status(403).render("urls_index", templateVars);
   } else {
   let relatedID = generateRandomString();
-  urlDatabase[relatedID] = req.body.longURL;
+
+  urlDatabase[relatedID] = {
+    longURL: req.body.longURL,
+    userID: req.cookies.user_id
+  }
   res.redirect(`/urls/${relatedID}`);
   } 
 });
 
 app.get("/urls/:id", (req, res) => {
   const neededURL = req.params.id;
+  // console.log(neededURL)
+  // console.log(urlDatabase[neededURL].longURL)
   const templateVars = { 
     id: neededURL, 
-    longURL: urlDatabase[neededURL], 
+    longURL: urlDatabase[neededURL].longURL, 
     user: users[req.cookies.user_id]
    };
   res.render("urls_show", templateVars);
@@ -215,3 +236,13 @@ const duplicateUser = (email, password) => {
   }
   return false;
 }
+
+const urlsForUser = (user_id) => {
+  let returnedObjects = {};
+  for (const addedURL in urlDatabase) {
+    if(urlDatabase[addedURL].userID === user_id) {
+      returnedObjects[addedURL] = urlDatabase[addedURL];
+    }
+  }
+  return returnedObjects
+};
