@@ -4,7 +4,7 @@ const app = express();
 const PORT = 8080;
 const cookieSession = require('cookie-session')
 const bcrypt = require("bcryptjs");
-const { duplicateEmail, duplicateUser, urlsForUser } = require('./helpers');
+const { getUserByEmail, duplicateUser, urlsForUser } = require('./helpers');
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
@@ -82,7 +82,7 @@ app.post("/register", (req, res) => {
       error: "Already have an account"
     };
     res.status(403).render("login", templateVars);
-  } else if(duplicateEmail(email, users)) {
+  } else if(getUserByEmail(email, users)) {
     const templateVars = {
       user: null, 
       error: "Email already in use"

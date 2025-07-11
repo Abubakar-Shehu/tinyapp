@@ -1,6 +1,6 @@
 const { assert } = require('chai');
 
-const { duplicateEmail } = require('../helpers.js');
+const { getUserByEmail } = require('../helpers.js');
 
 const testUsers = {
   "userRandomID": {
@@ -17,7 +17,7 @@ const testUsers = {
 
 describe('getUserByEmail', function() {
   it('should return a user with valid email', function() {
-    const user = duplicateEmail("user@example.com", testUsers)
+    const user = getUserByEmail("user@example.com", testUsers)
     const expectedUserID = "userRandomID";
     // Write your assert statement here
     assert.strictEqual(user.id, expectedUserID, "They should equal")

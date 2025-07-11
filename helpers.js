@@ -1,4 +1,4 @@
-const duplicateEmail = (email, database) => {
+const getUserByEmail = (email, database) => {
   for (const userId in database) {
     if (database[userId].email === email)  {
       return database[userId];
@@ -26,4 +26,4 @@ const urlsForUser = (user_id, database) => {
   return returnedObjects
 };
 
-module.exports = { duplicateEmail, duplicateUser, urlsForUser }
+module.exports = { getUserByEmail, duplicateUser, urlsForUser }
