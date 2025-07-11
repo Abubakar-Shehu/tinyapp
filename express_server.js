@@ -67,7 +67,6 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const newUserID = generateRandomString();
   const { email, password } = req.body;
-  const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (email === '' || password === '') {
     return res.status(400).send('Email or password cannot be empty');
@@ -84,6 +83,7 @@ app.post("/register", (req, res) => {
     };
     res.status(403).render("register", templateVars);
   } else {
+    const hashedPassword = bcrypt.hashSync(password, 10);
     users[newUserID] = {
       id: newUserID,
       email: email,
@@ -231,9 +231,8 @@ const duplicateEmail = (email) => {
 }
 
 const duplicateUser = (email, password) => {
-  const hashedPassword = bcrypt.hashSync(password, 10);
   for (const userId in users) {
-    if (users[userId].email === email && bcrypt.compareSync(users[userId].password, hashedPassword)) {
+    if (users[userId].email === email && bcrypt.compareSync(password, users[userId].password)) {
       return users[userId];
     }
   }
