@@ -130,12 +130,17 @@ app.post("/login", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {  
+  const registeredUsers = Object.keys(users)
+  if (!registeredUsers.includes(req.session.user_id)) {
+    return res.status(400).send('Unauthenticated user, please login');
+  } else {
   const templateVars = { 
     urls: urlsForUser(req.session.user_id, urlDatabase),
     user: users[req.session.user_id],
     error: ""
   };
   res.render("urls_index", templateVars);
+  }
 });
 
 app.get("/urls/new", (req, res) => {
@@ -171,18 +176,26 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
+  const registeredUsers = Object.keys(users)
   const neededURL = req.params.id;
+  const userURL = urlDatabase[neededURL].userID
+  if (!registeredUsers.includes(req.session.user_id)) {
+    return res.status(400).send('Unauthenticated user, please login');
+  } else if (req.session.user_id !== userURL) {
+    return res.status(400).send('This is not a user owned URL');
+  } else {
   const templateVars = { 
     id: neededURL, 
     longURL: urlDatabase[neededURL].longURL, 
     user: users[req.session.user_id]
   };
   res.render("urls_show", templateVars);
+  }
 });
 
 app.get("/u/:id", (req, res) => {
   const shortURLId = req.params.id;
-  const longURL = urlDatabase[shortURLId];
+  const longURL = urlDatabase[shortURLId].longURL;
   if (shortURLId){
     res.redirect(longURL);
   } else {
@@ -196,12 +209,13 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL;
+  urlDatabase[req.params.id].userID = req.session.user_id;
+  urlDatabase[req.params.id].longURL = req.body.longURL;
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  req.session['user_id'] = null;
+  req.session = null;
   res.redirect("/login");
 });
 
