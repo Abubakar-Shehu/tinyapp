@@ -2,7 +2,9 @@
 const express = require("express");
 const app = express();
 const PORT = 8080;
+// Using encrypted cookie to make the cookie data secure
 const cookieSession = require('cookie-session');
+// Using Bcrypt to safely hash the users password
 const bcrypt = require("bcryptjs");
 const { getUserByEmail, duplicateUser, urlsForUser, generateRandomString } = require('./helpers');
 
@@ -14,12 +16,6 @@ app.use(cookieSession({
   // Cookie Options
   maxAge: 300 * 1000 // 5 min
 }));
-
-
-// const urlDatabase = {
-//   b2xVn2: "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com",
-// };
 
 const urlDatabase = {
   b6UTxQ: {
@@ -46,7 +42,12 @@ const users = {
 };
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  const registeredUsers = Object.keys(users)
+  if (registeredUsers.includes(req.session.user_id)) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login")
+  }
 });
 
 app.get("/urls.json", (req, res) => {
@@ -179,7 +180,9 @@ app.get("/urls/:id", (req, res) => {
   const registeredUsers = Object.keys(users)
   const neededURL = req.params.id;
   const userURL = urlDatabase[neededURL].userID
-  if (!registeredUsers.includes(req.session.user_id)) {
+  if (!neededURL) {
+    return res.status(400).send('URL does not exist');
+  } else if (!registeredUsers.includes(req.session.user_id)) {
     return res.status(400).send('Unauthenticated user, please login');
   } else if (req.session.user_id !== userURL) {
     return res.status(400).send('This is not a user owned URL');
@@ -204,14 +207,32 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
-  res.redirect(`/urls`); 
+  const registeredUsers = Object.keys(users)
+  const neededURL = req.params.id;
+  const userURL = urlDatabase[neededURL].userID
+  if (!registeredUsers.includes(req.session.user_id)) {
+    return res.status(400).send('Unauthenticated user, please login');
+  } else if (req.session.user_id !== userURL) {
+    return res.status(400).send('This is not a user owned URL');
+  } else {
+    delete urlDatabase[req.params.id];
+    res.redirect(`/urls`); 
+  }
 });
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id].userID = req.session.user_id;
-  urlDatabase[req.params.id].longURL = req.body.longURL;
-  res.redirect("/urls");
+  const registeredUsers = Object.keys(users)
+  const neededURL = req.params.id;
+  const userURL = urlDatabase[neededURL].userID
+  if (!registeredUsers.includes(req.session.user_id)) {
+    return res.status(400).send('Unauthenticated user, please login');
+  } else if (req.session.user_id !== userURL) {
+    return res.status(400).send('This is not a user owned URL');
+  } else {
+    urlDatabase[req.params.id].userID = req.session.user_id;
+    urlDatabase[req.params.id].longURL = req.body.longURL;
+    res.redirect("/urls");
+  }
 });
 
 app.post("/logout", (req, res) => {
