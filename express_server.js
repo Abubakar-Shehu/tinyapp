@@ -6,10 +6,12 @@ const PORT = 8080;
 const cookieSession = require('cookie-session');
 // Using Bcrypt to safely hash the users password
 const bcrypt = require("bcryptjs");
+// Importing the helper functions
 const { getUserByEmail, duplicateUser, urlsForUser, generateRandomString } = require('./helpers');
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
+// This is used to allow the app to use the encrypted cookie and we can set the key and name of the cookie (Ideally it should be in a secure place with other sensitive informations)
 app.use(cookieSession({
   name: 'session',
   keys: ["I-am-a-beginner-spare-me-pls"],
