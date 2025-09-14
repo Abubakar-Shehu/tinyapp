@@ -44,11 +44,11 @@ const users = {
 };
 
 app.get("/", (req, res) => {
-  const registeredUsers = Object.keys(users)
+  const registeredUsers = Object.keys(users);
   if (registeredUsers.includes(req.session.user_id)) {
     res.redirect("/urls");
   } else {
-    res.redirect("/login")
+    res.redirect("/login");
   }
 });
 
@@ -61,11 +61,11 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const registeredUsers = Object.keys(users)
+  const registeredUsers = Object.keys(users);
   if (registeredUsers.includes(req.session.user_id)) {
     res.redirect("/urls");
   } else {
-    const templateVars = { 
+    const templateVars = {
       user: users[req.session.user_id],
       error: ""
     };
@@ -79,15 +79,15 @@ app.post("/register", (req, res) => {
 
   if (email === '' || password === '') {
     return res.status(400).send('Email or password cannot be empty');
-  } else if(duplicateUser(email, password, users)) {
+  } else if (duplicateUser(email, password, users)) {
     const templateVars = {
-      user: users[req.session.user_id], 
+      user: users[req.session.user_id],
       error: "Already have an account"
     };
     res.status(403).render("login", templateVars);
-  } else if(getUserByEmail(email, users)) {
+  } else if (getUserByEmail(email, users)) {
     const templateVars = {
-      user: null, 
+      user: null,
       error: "Email already in use"
     };
     res.status(403).render("register", templateVars);
@@ -104,15 +104,15 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  const registeredUsers = Object.keys(users)
+  const registeredUsers = Object.keys(users);
   if (registeredUsers.includes(req.session.user_id)) {
     res.redirect("/urls");
   } else {
-  const templateVars = { 
-    user: users[req.session.user_id],
-    error: ""
-  };
-  res.render("login", templateVars);
+    const templateVars = {
+      user: users[req.session.user_id],
+      error: ""
+    };
+    res.render("login", templateVars);
   }
 });
 
@@ -120,38 +120,38 @@ app.post("/login", (req, res) => {
   const { email, password } = req.body;
   const existingUser = duplicateUser(email, password, users);
 
-  if(existingUser) {
+  if (existingUser) {
     req.session['user_id'] = existingUser.id;
     res.redirect("/urls");
   } else {
     const templateVars = {
-      user: null, 
+      user: null,
       error: "Login failed. Please check your email and password."
     };
     res.status(403).render("login", templateVars);
   }
 });
 
-app.get("/urls", (req, res) => {  
-  const registeredUsers = Object.keys(users)
+app.get("/urls", (req, res) => {
+  const registeredUsers = Object.keys(users);
   if (!registeredUsers.includes(req.session.user_id)) {
     return res.status(400).send('Unauthenticated user, please login');
   } else {
-  const templateVars = { 
-    urls: urlsForUser(req.session.user_id, urlDatabase),
-    user: users[req.session.user_id],
-    error: ""
-  };
-  res.render("urls_index", templateVars);
+    const templateVars = {
+      urls: urlsForUser(req.session.user_id, urlDatabase),
+      user: users[req.session.user_id],
+      error: ""
+    };
+    res.render("urls_index", templateVars);
   }
 });
 
 app.get("/urls/new", (req, res) => {
   const registeredUsers = Object.keys(users);
-    if (!registeredUsers.includes(req.session.user_id)) {
+  if (!registeredUsers.includes(req.session.user_id)) {
     res.redirect("/login");
   } else {
-    const templateVars = { 
+    const templateVars = {
       user: users[req.session.user_id],
     };
     res.render("urls_new", templateVars);
@@ -163,25 +163,25 @@ app.post("/urls", (req, res) => {
   if (!registeredUsers.includes(req.session.user_id)) {
     const templateVars = {
       urls: urlDatabase,
-      user: null, 
+      user: null,
       error: "Cannot shorten URL as you are not logged in"
     };
     res.status(403).render("urls_index", templateVars);
   } else {
-  let relatedID = generateRandomString();
+    let relatedID = generateRandomString();
 
-  urlDatabase[relatedID] = {
-    longURL: req.body.longURL,
-    userID: req.session.user_id
-   };
-  res.redirect(`/urls/${relatedID}`);
-  } 
+    urlDatabase[relatedID] = {
+      longURL: req.body.longURL,
+      userID: req.session.user_id
+    };
+    res.redirect(`/urls/${relatedID}`);
+  }
 });
 
 app.get("/urls/:id", (req, res) => {
-  const registeredUsers = Object.keys(users)
+  const registeredUsers = Object.keys(users);
   const neededURL = req.params.id;
-  const userURL = urlDatabase[neededURL].userID
+  const userURL = urlDatabase[neededURL].userID;
   if (!neededURL) {
     return res.status(400).send('URL does not exist');
   } else if (!registeredUsers.includes(req.session.user_id)) {
@@ -189,43 +189,43 @@ app.get("/urls/:id", (req, res) => {
   } else if (req.session.user_id !== userURL) {
     return res.status(400).send('This is not a user owned URL');
   } else {
-  const templateVars = { 
-    id: neededURL, 
-    longURL: urlDatabase[neededURL].longURL, 
-    user: users[req.session.user_id]
-  };
-  res.render("urls_show", templateVars);
+    const templateVars = {
+      id: neededURL,
+      longURL: urlDatabase[neededURL].longURL,
+      user: users[req.session.user_id]
+    };
+    res.render("urls_show", templateVars);
   }
 });
 
 app.get("/u/:id", (req, res) => {
   const shortURLId = req.params.id;
   const longURL = urlDatabase[shortURLId].longURL;
-  if (shortURLId){
+  if (shortURLId) {
     res.redirect(longURL);
   } else {
     res.status(400).send("This short URL does not exist");
-  } 
+  }
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  const registeredUsers = Object.keys(users)
+  const registeredUsers = Object.keys(users);
   const neededURL = req.params.id;
-  const userURL = urlDatabase[neededURL].userID
+  const userURL = urlDatabase[neededURL].userID;
   if (!registeredUsers.includes(req.session.user_id)) {
     return res.status(400).send('Unauthenticated user, please login');
   } else if (req.session.user_id !== userURL) {
     return res.status(400).send('This is not a user owned URL');
   } else {
     delete urlDatabase[req.params.id];
-    res.redirect(`/urls`); 
+    res.redirect(`/urls`);
   }
 });
 
 app.post("/urls/:id", (req, res) => {
-  const registeredUsers = Object.keys(users)
+  const registeredUsers = Object.keys(users);
   const neededURL = req.params.id;
-  const userURL = urlDatabase[neededURL].userID
+  const userURL = urlDatabase[neededURL].userID;
   if (!registeredUsers.includes(req.session.user_id)) {
     return res.status(400).send('Unauthenticated user, please login');
   } else if (req.session.user_id !== userURL) {
